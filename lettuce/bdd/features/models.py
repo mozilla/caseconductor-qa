@@ -198,6 +198,7 @@ class BaseModel(object):
     def get_list_from_endpoint(self,
                                uri,
                                tcm_type = None,
+                               params = {},
                                headers = get_json_headers()):
         '''
             This hits an endpoint.  It goes into the ArrayOfXXX tcm_type of response
@@ -205,7 +206,7 @@ class BaseModel(object):
         if tcm_type == None:
             tcm_type = self.singular
 
-        response_txt = do_get(uri, headers = headers)
+        response_txt = do_get(uri, params = params, headers = headers)
 
         try:
             array_of_type = json_to_obj(response_txt)[ns(as_arrayof(tcm_type))][0]
@@ -565,10 +566,10 @@ class TagModel(BaseModel):
         super(TagModel, self).__init__("tag")
 
     def get_resid(self, name):
-        return super(TagModel, self).__get_resid__({"tag": name})
+        return super(TagModel, self).__get_resid__({"name": name})
 
     def get_stored_or_store_tag(self, stored, tag):
-        return get_stored_or_store_field("tag", self.singular, stored, tag)
+        return get_stored_or_store_field("name", self.singular, stored, tag)
 
     def delete(self, name):
         resid, version = self.get_resid(name)
@@ -741,10 +742,13 @@ class RunnableTestContainerBaseModel(BaseModel):
         do_put("%s/%s/activate" % (self.root_path, tcm_id),
                   {"originalVersionId": version})
 
-    def get_summary_list(self, tcm_id):
-        return self.get_list_from_endpoint("%s/%s/reports/coverage/resultstatus" %
-                                           (self.root_path, tcm_id),
-                                           tcm_type = "CategoryValueInfo")
+    def get_summary_list(self, cycle_id, params = {}):
+        cycleModel = TestcycleModel()
+        uri = "%s/%s/reports/coverage/resultstatus" % (cycleModel.root_path, cycle_id)
+        return self.get_list_from_endpoint(uri,
+                                           tcm_type = "CategoryValueInfo",
+                                           params = params,
+                                           headers = get_form_headers())
 
     def approve_all_results(self, testcycle):
         tcm_id, version = get_resource_identity(testcycle)
@@ -841,15 +845,23 @@ class TestrunModel(RunnableTestContainerBaseModel):
                                                 (self.root_path, includedtestcase_id),
                                            tcm_type = "testcaseassignment")
 
+    def get_cycle_id(self, testrun):
+        tc_id = testrun[ns("testCycleLocator")]["@id"]
+        return tc_id
+
+    def get_summary_list(self, testrun):
+        testcycle_id = self.get_cycle_id(testrun)
+        testrun_id = get_resource_identity(testrun)[0]
+        params = {"testRunId": testrun_id}
+        return super(TestrunModel, self).get_summary_list(testcycle_id, params = params)
+
+
     def get_result_list(self,
                    testcase_id,
                    testrun_id = None,
                    includedtestcase_list = None,
                    tcassignment_list = None):
-        '''
-            I *think* this is the best way to overload the method for several possible parameters.
-            trying this technique
-        '''
+
         if tcassignment_list is None:
             # we need to get it first
             if includedtestcase_list is None:
@@ -865,9 +877,12 @@ class TestrunModel(RunnableTestContainerBaseModel):
 
         found_assignment = verify_single_item_in_list(tcassignment_list, "testCaseId", testcase_id)
         assignment_id = get_resource_identity(found_assignment)[0]
-        return self.get_list_from_endpoint("%s/assignments/%s/results" % \
+        return_list =  self.get_list_from_endpoint("%s/assignments/%s/results" % \
                                                 (self.root_path, assignment_id),
-                                           tcm_type = "testresult")
+                                               tcm_type = "testresult")
+#        assert False, jstr(return_list)
+        return return_list
+
 
 
     def get_result(self,

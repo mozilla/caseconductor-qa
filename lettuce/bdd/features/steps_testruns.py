@@ -7,7 +7,7 @@ from features.models import TestcaseModel, UserModel, TestcycleModel, \
     TestrunModel
 from features.tcm_data_helper import ns, jstr, verify_single_item_in_list, \
     compare_dicts_by_keys, get_approval_status_id, eq_, get_result_status_id, \
-    eq_list_length
+    eq_list_length, get_stored_or_store_field
 from features.tcm_request_helper import get_resource_identity
 from lettuce import step
 
@@ -331,10 +331,8 @@ def testrun_has_summary_counts(step, stored_testrun, testrun_name):
 
     testrun = trModel.get_stored_or_store_obj(stored_testrun, testrun_name)
 
-    testrun_id = get_resource_identity(testrun)[0]
-
     # get the list of testcases for this testrun
-    summary_list = trModel.get_summary_list(testrun_id)
+    summary_list = trModel.get_summary_list(testrun)
 
     # walk through and verify that each testcase has the expected status
     for category in step.hashes:
@@ -348,5 +346,47 @@ def testrun_has_summary_counts(step, stored_testrun, testrun_name):
 
 
 
+@step(u'remember the URL for the result for (that testcase|the testcase with name "(.*)") for (that testrun|the testrun with name "(.*)")')
+def remember_the_url_for_the_testcase_result(step, stored_testcase, testcase_name, stored_testrun, testrun_name):
+    trModel = TestrunModel()
+    testrun = trModel.get_stored_or_store_obj(stored_testrun, testrun_name)
+    tcModel = TestcaseModel()
+    testcase = tcModel.get_stored_or_store_obj(stored_testcase, testcase_name)
+
+    testrun_id = get_resource_identity(testrun)[0]
+    testcase_id = get_resource_identity(testcase)[0]
+
+    # get the list of testcases for this testrun
+    includedtestcase_list = trModel.get_included_testcases(testrun_id)
+
+    result = trModel.get_result(testcase_id,
+                                includedtestcase_list = includedtestcase_list)
+    testresult_url = result[ns("resourceIdentity")]["@url"]
+    get_stored_or_store_field("url", "testcaseRunResult", "", testresult_url)
+
+
+@step(u'the URL for the result for (that testcase|the testcase with name "(.*)") for (that testrun|the testrun with name "(.*)") has not changed')
+def check_url_for_the_testcase_result_has_not_changed(step, stored_testcase, testcase_name, stored_testrun, testrun_name):
+    stored_url = get_stored_or_store_field("url", "testcaseRunResult", "that url", None)
+
+
+    trModel = TestrunModel()
+    testrun = trModel.get_stored_or_store_obj(stored_testrun, testrun_name)
+    tcModel = TestcaseModel()
+    testcase = tcModel.get_stored_or_store_obj(stored_testcase, testcase_name)
+
+    testrun_id = get_resource_identity(testrun)[0]
+    testcase_id = get_resource_identity(testcase)[0]
+
+    # get the list of testcases for this testrun
+    includedtestcase_list = trModel.get_included_testcases(testrun_id)
+
+    result = trModel.get_result(testcase_id,
+                                includedtestcase_list = includedtestcase_list)
+    testresult_url = result[ns("resourceIdentity")]["@url"]
+
+    eq_(testresult_url,
+            stored_url,
+            "testRunResult URL check")
 
 

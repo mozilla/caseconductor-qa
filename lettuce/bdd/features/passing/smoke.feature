@@ -93,11 +93,11 @@ Feature: Smoke Tests
         Given I create the seed company and product with these names:
             | company name    | product name  |
             | Massive Dynamic | Cortexiphan   |
-        And a tag with tag "You are IT" does not exist
-        when I create a new tag with that tag
-        then a tag with that tag exists
-        and when I delete the tag with that tag
-        then a tag with that tag does not exist
+        And a tag with name "You are IT" does not exist
+        when I create a new tag with that name
+        then a tag with that name exists
+        and when I delete the tag with that name
+        then a tag with that name does not exist
 
     Scenario: Create and delete a Testcase
         Given I create the seed company and product with these names:
