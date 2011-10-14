@@ -29,9 +29,9 @@ public class TcmDbUnitServlet extends HttpServlet {
     private static Logger logger = Logger.getLogger(TcmDbUnitServlet.class);
     IDatabaseConnection connection;
     String host_name;
-    /**
-     * 
-     */
+    String db_name;
+    String db_uname;
+    String db_pw;
 
     public TcmDbUnitServlet() {
         logger.info("DbUnit Servlet loaded");
@@ -39,38 +39,48 @@ public class TcmDbUnitServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
-        
+
         // print out the request, so we can debug this on the server side.
         String reqStr = request.getRequestURI();
         String reqQuery = request.getQueryString();
         if (reqQuery != null) {
             reqStr = reqStr + "?" + reqQuery;
         }
-        
+
         // this is the host name for the database that needs resetting
         host_name = request.getParameter("host");
+
         if (host_name == null) {
             throw new ServletException("No hostname provided: /?host=yourhost");
         }
-        
+
+        db_name = request.getParameter("db_name") == null? "tcm": request.getParameter("db_name");
+        db_uname = request.getParameter("db_uname") == null? "root": request.getParameter("db_uname");
+        db_pw = request.getParameter("db_pw") == null? "": request.getParameter("db_pw");
+
         if (request.getRequestURI() != null
             && request.getRequestURI().indexOf("/savedb") > -1) {
-            
+
             try {
                 connection = getConnection();
 
-                // full database export
-                IDataSet fullDataSet = connection.createDataSet();
-                
-                FlatXmlDataSet.write(fullDataSet, new FileOutputStream(DB_FILENAME));
-                logger.info("Database saved");
-                     
-                response.setStatus(HttpServletResponse.SC_OK);
-            } 
+                try {
+                    // full database export
+                    IDataSet fullDataSet = connection.createDataSet();
+
+                    FlatXmlDataSet.write(fullDataSet, new FileOutputStream(DB_FILENAME));
+                    logger.info("Database saved to " + new File(DB_FILENAME).getAbsolutePath());
+
+                    response.setStatus(HttpServletResponse.SC_OK);
+                } finally {
+                    connection.close();
+                    connection = null;
+                }
+            }
             catch (Exception ex) {
                 logger.error("Database issue", ex);
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            } 
+            }
 
         }
         else if (request.getRequestURI() != null
@@ -86,18 +96,18 @@ public class TcmDbUnitServlet extends HttpServlet {
                 try {
                     DatabaseOperation.TRUNCATE_TABLE.execute(connection, dataSet);
                     DatabaseOperation.CLEAN_INSERT.execute(connection, dataSet);
-                    logger.info("Database refreshed");
+                    logger.info("Database refreshed from " + new File(DB_FILENAME).getAbsolutePath());
                 } finally {
                     connection.close();
                     connection = null;
                 }
-                     
+
                 response.setStatus(HttpServletResponse.SC_OK);
-            } 
+            }
             catch (Exception ex) {
                 logger.error("Database issue", ex);
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            } 
+            }
 
         }
         // request not handled, just return error
@@ -113,28 +123,28 @@ public class TcmDbUnitServlet extends HttpServlet {
     private IDatabaseConnection getConnection() throws SQLException, DatabaseUnitException {
         if (connection == null) {
             Connection jdbcConnection = DriverManager.getConnection(
-                    "jdbc:mysql://" + host_name + "/tcm?sessionVariables=FOREIGN_KEY_CHECKS=0", "root", "");
+                    "jdbc:mysql://" + host_name + "/" + db_name + "?sessionVariables=FOREIGN_KEY_CHECKS=0", db_uname, db_pw);
             connection = new DatabaseConnection(jdbcConnection);
-            DatabaseConfig config = connection.getConfig(); 
+            DatabaseConfig config = connection.getConfig();
             org.dbunit.ext.mysql.MySqlDataTypeFactory dtFactory = new MySqlDataTypeFactory();
-            
-            config.setProperty("http://www.dbunit.org/properties/datatypeFactory", 
+
+            config.setProperty("http://www.dbunit.org/properties/datatypeFactory",
                     dtFactory);
         }
         return connection;
     }
 
     /*
-     * These are all handled exactly the same as any request . 
+     * These are all handled exactly the same as any request .
      */
-    
-    
-    
+
+
+
     public void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
     }
-    
+
     protected void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
