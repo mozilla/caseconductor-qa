@@ -5,7 +5,7 @@ Created on Mar 23, 2011
 '''
 from features.models import TestcycleModel, ProductModel, UserModel
 from features.tcm_data_helper import get_result_status_id, \
-    verify_single_item_in_list, ns, jstr, eq_list_length
+    verify_single_item_in_list, ns, jstr, eq_list_length, eq_
 from features.tcm_request_helper import get_resource_identity
 from lettuce.decorators import step
 
@@ -179,14 +179,16 @@ def testcycle_has_team_members(step, stored_testcycle, testcycle_name, expect_an
                                              "lastName": names[1]}
                                    )
 
+@step(u'(that testcycle|the testcycle with name "(.*)") has the percent complete of (.*):')
+def testcycle_has_percent_complete_of_X(step, stored_testcycle, testcycle_name, exp_percent):
+    testcycleModel = TestcycleModel()
+    testcycle = testcycleModel.get_stored_or_store_obj(stored_testcycle, testcycle_name)
+    testcycle_id = get_resource_identity(testcycle)[0]
 
+    # get the list of testcases for this testcycle
+    act_percent = testcycleModel.get_percent_complete(testcycle_id)
 
-
-
-
-
-
-
+    eq_(act_percent[ns("categoryValue")], int(exp_percent), "percent complete check")
 
 
 

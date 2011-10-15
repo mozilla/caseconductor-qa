@@ -264,6 +264,7 @@ class BaseModel(object):
     def get_single_item_from_endpoint(self,
                                       uri = None,
                                       tcm_type = None,
+                                      params = {},
                                       headers = get_json_headers()):
         '''
             This hits an endpoint.  No searchResult or ArrayOfXXXX part here
@@ -275,7 +276,7 @@ class BaseModel(object):
         if tcm_type == None:
             tcm_type = self.singular
 
-        response_txt = do_get(uri, headers = headers)
+        response_txt = do_get(uri, params = params, headers = headers)
         tcm_obj = json_to_obj(response_txt)
         try:
             item = tcm_obj[ns(tcm_type)][0]
@@ -746,6 +747,14 @@ class RunnableTestContainerBaseModel(BaseModel):
         cycleModel = TestcycleModel()
         uri = "%s/%s/reports/coverage/resultstatus" % (cycleModel.root_path, cycle_id)
         return self.get_list_from_endpoint(uri,
+                                           tcm_type = "CategoryValueInfo",
+                                           params = params,
+                                           headers = get_form_headers())
+
+    def get_percent_complete(self, cycle_id, params = {}):
+        cycleModel = TestcycleModel()
+        uri = "%s/%s/reports/coverage/percentcomplete" % (cycleModel.root_path, cycle_id)
+        return self.get_single_item_from_endpoint(uri,
                                            tcm_type = "CategoryValueInfo",
                                            params = params,
                                            headers = get_form_headers())

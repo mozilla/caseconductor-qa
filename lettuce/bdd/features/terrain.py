@@ -13,6 +13,9 @@ world.applicationUnderTest = "Case Keeper"
 world.hostname = "localhost"
 
 world.db_hostname = world.hostname
+world.db_name = 'cctest'
+world.db_uname = 'camd'
+world.db_pw = 'mozilla'
 
 # for my servlet
 world.port = 8080
@@ -54,8 +57,14 @@ world.api_prefix = "/tcm/services/v2/rest/"
 
 # paths for test automation
 world.path_mockdata =           "/mockdata"
-world.path_savedb =             "/TcmDbUnitServlet/savedb?host=%s" % (world.db_hostname)
-world.path_restoredb =          "/TcmDbUnitServlet/restoredb?host=%s" % (world.db_hostname)
+world.path_savedb =             "/TcmDbUnitServlet/savedb?host=%s&db_name=%s&db_uname=%s&db_pw=%s" % (world.db_hostname,
+                                                                                                      world.db_name,
+                                                                                                      world.db_uname,
+                                                                                                      world.db_pw)
+world.path_restoredb =          "/TcmDbUnitServlet/restoredb?host=%s&db_name=%s&db_uname=%s&db_pw=%s" % (world.db_hostname,
+                                                                                                      world.db_name,
+                                                                                                      world.db_uname,
+                                                                                                      world.db_pw)
 
 # now import the "local" file for any user-changed settings
 try:
