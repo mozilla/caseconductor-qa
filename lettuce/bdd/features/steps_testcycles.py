@@ -179,7 +179,7 @@ def testcycle_has_team_members(step, stored_testcycle, testcycle_name, expect_an
                                              "lastName": names[1]}
                                    )
 
-@step(u'(that testcycle|the testcycle with name "(.*)") has the percent complete of (.*):')
+@step(u'(that testcycle|the testcycle with name "(.*)") has the percent complete of (.*)')
 def testcycle_has_percent_complete_of_X(step, stored_testcycle, testcycle_name, exp_percent):
     testcycleModel = TestcycleModel()
     testcycle = testcycleModel.get_stored_or_store_obj(stored_testcycle, testcycle_name)

@@ -280,7 +280,12 @@ class BaseModel(object):
         tcm_obj = json_to_obj(response_txt)
         try:
             item = tcm_obj[ns(tcm_type)][0]
-            self.store_latest(item)
+
+            # we only want to store this latest item, if it's an object of this type.  If this
+            # model is doing a search for a different type of item (like percent complete object
+            # of "CategoryValueInfo" then we don't want to store it as "latest item"
+            if uri == self.root_path:
+                self.store_latest(item)
             return item
 
         except KeyError:

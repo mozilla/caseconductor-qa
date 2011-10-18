@@ -81,17 +81,17 @@ Feature: Test Cycles
             | Another Passing tc |
             | Failing tc         |
             | Invalidisimo       |
-        Then the testcycle with name "Baroque Cycle" has the percent complete of 0:
+        Then the testcycle with name "Baroque Cycle" has the percent complete of 0
         And the user with that name marks the following testcase result statuses for the testrun with that name
             | name               | status      |
             | Passing tc         | Passed      |
-        Then the testcycle with name "Baroque Cycle" has the percent complete of 25:
+        Then the testcycle with name "Baroque Cycle" has the percent complete of 25
         And the user with that name marks the following testcase result statuses for the testrun with that name
             | name               | status      |
             | Another Passing tc | Passed      |
             | Failing tc         | Failed      |
-        Then the testcycle with name "Baroque Cycle" has the percent complete of 75:
+        Then the testcycle with name "Baroque Cycle" has the percent complete of 75
         And the user with that name marks the following testcase result statuses for the testrun with that name
             | name               | status      |
             | Invalidisimo       | Passed      |
-        Then the testcycle with name "Baroque Cycle" has the percent complete of 100:
+        Then the testcycle with name "Baroque Cycle" has the percent complete of 100
